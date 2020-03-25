@@ -9,18 +9,22 @@ const TARGET_BITS: i32 = 24;
 
 type Pdata = (u64, Vec<u8>);
 
-struct Proof<'s>{
-    block: &'s Block,
-    target: i32,
+pub struct Proof<'s>{
+    block: &'s mut Block,
+    target: BigInt,
 }
 
 impl<'a> Proof<'a> {
-    pub fn new(block: &'a Block) -> Self{
-        let target = 1 << (256 - TARGET_BITS);
+    pub fn new(block: &'a mut Block) -> Self{
+        let y = 256 - TARGET_BITS;
+        let y = y.to_bigint().unwrap();
+        let x = 1.to_bigint().unwrap();        
+
+        let target = x * (ToBigInt::to_bigint(&2).unwrap()^y);
         Proof{block, target}
     }
 
-    pub fn prepare_data(&self, nonce: u64) -> String{
+    fn prepare_data(&self, nonce: u64) -> String{
         let mut result = String::new();
         result.push_str(self.block.prev_hash().ok().unwrap());
         result.push_str(self.block.data().ok().unwrap());
@@ -36,6 +40,7 @@ impl<'a> Proof<'a> {
         let mut nonce: u64 = 0;
         let maxNonce = u64::max_value();
 
+        println!("Mining the block containing {}", self.block.data().ok().unwrap());
         while nonce < maxNonce {
             let data = self.prepare_data(nonce);
             let mut hasher = Sha256::new();
@@ -44,12 +49,13 @@ impl<'a> Proof<'a> {
 
             hashInt = BigInt::from_bytes_le(Sign::Plus, &hash);
             
-            if hashInt.cmp(&ToBigInt::to_bigint(&self.target).unwrap()) == Ordering::Less{
+            if hashInt.cmp(&self.target) == Ordering::Less{
                 break;
             }else{
                 nonce = nonce + 1;
             }
         }
+        println!("Hash: {:?}", hash);
         (nonce, hash)
     }
 

@@ -1,15 +1,28 @@
 use std::cell::RefCell;
+use crate::block::Block;
 
 pub struct Blockchain {
-    vec: RefCell<Vec<i32>>,
+    vec: Vec<Block>,
 }
 
 impl Blockchain {
     pub fn new() -> Self{
-       Blockchain {vec: RefCell::new(Vec::new())}
+        // Create the blockchain with the genesis block
+        let mut blockchain = Blockchain {vec: Vec::new()};
+        let mut genesis = Block::genesis();
+        blockchain.vec.push(genesis);
+        blockchain
     }
 
-    pub fn add(&self, value: i32){
-        self.vec.borrow_mut().push(value);
+    pub fn add(&mut self, data: String){
+        println!("SIZE: {}", self.vec.len());
+
+        match self.vec.last().unwrap().hash().ok() {
+            Some(v) => {
+                let mut block = Block::new(v.to_string(), data);
+                self.vec.push(block);
+            },
+            None => println!("The blockchain is empty"),
+        }       
     }
 }

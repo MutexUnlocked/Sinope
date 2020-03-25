@@ -1,9 +1,9 @@
 use std::time::{SystemTime, UNIX_EPOCH};
+use crate::proof::Proof;
 
 pub enum BarErr {
     Nothing
 }
-
 
 pub struct Block {
     nonce: Option<u64>, 
@@ -22,15 +22,15 @@ impl Block {
         let timestamp = since_the_epoch.as_millis();
         
         //TODO: IMplement proof of work and fix nonce
-        let mut hash = String::new();
-        hash.push_str("hahsahdhfas");
-        let b = Block{
-            nonce: Some(1),
+        let mut b = Block{
+            nonce: None,
             timestamp: Some(timestamp),
             data: Some(data),
-            hash: Some(hash),
+            hash: None,
             prev_hash: Some(prev_hash),
         };
+        let mut proof = Proof::new(&mut b);
+        proof.run();
         b
     }
 
@@ -73,7 +73,7 @@ impl Block {
     pub fn genesis() -> Self{
         let mut gen = String::new();
         gen.push_str("GENSIS");
-        Block{data: Some(gen), hash: None, prev_hash: None,
-         timestamp: None, nonce: None}
+        let block = Block::new("".to_string(), gen);
+        block
     }           
 }
