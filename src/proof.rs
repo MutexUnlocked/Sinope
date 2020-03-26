@@ -1,11 +1,11 @@
 use crate::block::Block;
-use sha2::{Sha256, Sha512, Digest};
+use sha2::{Sha256, Digest};
 use std::cmp::Ordering;
 use num::bigint::{BigInt, Sign, ToBigInt};
 
 //use bytes::{BytesMut, BufMut};
 
-const TARGET_BITS: i32 = 24;
+const TARGET_BITS: usize = 24;
 
 type Pdata = (u64, Vec<u8>);
 
@@ -16,40 +16,46 @@ pub struct Proof<'s>{
 
 impl<'a> Proof<'a> {
     pub fn new(block: &'a mut Block) -> Self{
-        let y = 256 - TARGET_BITS;
-        let y = y.to_bigint().unwrap();
-        let x = 1.to_bigint().unwrap();        
+        let y: usize = 256 - TARGET_BITS;
+        let target = 1.to_bigint().unwrap();        
 
-        let target = x * (ToBigInt::to_bigint(&2).unwrap()^y);
+        let target = target << y;
         Proof{block, target}
     }
 
-    fn prepare_data(&self, nonce: u64) -> String{
-        let mut result = String::new();
-        result.push_str(self.block.prev_hash().ok().unwrap());
-        result.push_str(self.block.data().ok().unwrap());
-        result.push_str(&hex::encode(self.block.timestamp().ok().unwrap().to_string()));
-        result.push_str(&hex::encode(TARGET_BITS.to_string()));
-        result.push_str(&hex::encode(self.block.nonce().ok().unwrap().to_string()));
+    fn prepare_data(&self, nonce: u64) -> Vec<u8>{
+        //TODO: add everything to Vec<u8>
+        let mut result: Vec<u8> = Vec::<u8>::new();
+        let mut tmp: Vec<u8> = self.block.data().ok().unwrap().clone().into_bytes();
+        result.append(&mut self.block.prev_hash().ok().unwrap().to_vec());
+        result.append(&mut tmp);
+        result.append(&mut hex::encode(self.block.timestamp().ok().unwrap().to_string()).into_bytes());
+        result.append(&mut hex::encode(TARGET_BITS.to_string()).into_bytes());
+        result.append(&mut nonce.to_string().into_bytes());
         result
     }
 
+    // TODO: FIX THIS SHIT
     pub fn run(&mut self) -> Pdata{
-        let mut hash: Vec<u8> = vec![0;8];
-        let mut hashInt;
+        let mut hash: Vec<u8> = vec![0;4];
+        let mut hash_int;
         let mut nonce: u64 = 0;
-        let maxNonce = u64::max_value();
+        let max_nonce = u64::max_value();
 
         println!("Mining the block containing {}", self.block.data().ok().unwrap());
-        while nonce < maxNonce {
+        while nonce < max_nonce {
             let data = self.prepare_data(nonce);
             let mut hasher = Sha256::new();
             hasher.input(data);
             hash = hasher.result().to_vec();
 
-            hashInt = BigInt::from_bytes_le(Sign::Plus, &hash);
+            hash_int = BigInt::from_bytes_le(Sign::Plus, &hash);
+            // println!("HASH: {}", hash_int);
+            // println!("NONCE: {}", nonce);
+            // println!("TARGET: {}", &self.target);
+
             
-            if hashInt.cmp(&self.target) == Ordering::Less{
+            if hash_int.cmp(&self.target) == Ordering::Less{
                 break;
             }else{
                 nonce = nonce + 1;

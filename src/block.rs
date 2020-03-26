@@ -9,19 +9,19 @@ pub struct Block {
     nonce: Option<u64>, 
     timestamp: Option<u128>,
     data: Option<String>,
-    hash: Option<String>,
-    prev_hash: Option<String>,
+    hash: Option<Vec<u8>>,
+    prev_hash: Option<Vec<u8>>,
 }
 
 impl Block {
     // Creates a new block
-    pub fn new(prev_hash: String, data: String) -> Self {
+    pub fn new(prev_hash: Vec<u8>, data: String) -> Self {
         let start = SystemTime::now();
         let since_the_epoch = start.duration_since(UNIX_EPOCH)
             .expect("Time went backwards!");
         let timestamp = since_the_epoch.as_millis();
         
-        //TODO: IMplement proof of work and fix nonce
+        //TODO: Implement proof of work and fix nonce
         let mut b = Block{
             nonce: None,
             timestamp: Some(timestamp),
@@ -30,7 +30,9 @@ impl Block {
             prev_hash: Some(prev_hash),
         };
         let mut proof = Proof::new(&mut b);
-        proof.run();
+        let (n, h) = proof.run();
+        b.nonce = Some(n);
+        b.hash = Some(h);
         b
     }
 
@@ -49,13 +51,13 @@ impl Block {
         }
     }
 
-    pub fn hash(&self) -> Result<&String, BarErr> {
+    pub fn hash(&self) -> Result<&Vec<u8>, BarErr> {
         match self.hash {
             Some(ref x) => Ok(x),
             None => Err(BarErr::Nothing)
         }
     }
-    pub fn prev_hash(&self) -> Result<&String, BarErr> {
+    pub fn prev_hash(&self) -> Result<&Vec<u8>, BarErr> {
         match self.prev_hash {
             Some(ref x) => Ok(x),
             None => Err(BarErr::Nothing)
@@ -72,8 +74,9 @@ impl Block {
 
     pub fn genesis() -> Self{
         let mut gen = String::new();
+        let v: Vec<u8> = vec![0;0];
         gen.push_str("GENSIS");
-        let block = Block::new("".to_string(), gen);
+        let block = Block::new(v, gen);
         block
     }           
 }

@@ -19,7 +19,7 @@ impl Blockchain {
 
         match self.vec.last().unwrap().hash().ok() {
             Some(v) => {
-                let mut block = Block::new(v.to_string(), data);
+                let mut block = Block::new(v.to_vec(), data);
                 self.vec.push(block);
             },
             None => println!("The blockchain is empty"),
