@@ -1,10 +1,12 @@
 use std::time::{SystemTime, UNIX_EPOCH};
+use serde::{Deserialize, Serialize};
 use crate::proof::Proof;
 
 pub enum BarErr {
     Nothing
 }
 
+#[derive(Serialize, Deserialize)]
 pub struct Block {
     nonce: Option<u64>, 
     timestamp: Option<u128>,
@@ -69,6 +71,14 @@ impl Block {
             Some(ref x) => Ok(x),
             None => Err(BarErr::Nothing)
         }
+    }
+
+    pub fn serialize(&self) -> Vec<u8>{
+        bincode::serialize(&self).unwrap()
+    }
+
+    pub fn deserialize(encoded: Vec<u8>) -> Block{
+        bincode::deserialize(&encoded[..]).unwrap()
     }
 
 

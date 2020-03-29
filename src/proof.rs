@@ -61,6 +61,7 @@ impl<'a> Proof<'a> {
                 nonce = nonce + 1;
             }
         }
+    
         println!("Hash: {:?}", hash);
         (nonce, hash)
     }
