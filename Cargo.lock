@@ -5,6 +5,7 @@ name = "Sinope"
 version = "0.1.0"
 dependencies = [
  "bincode",
+ "clap",
  "hex",
  "num",
  "rocksdb",

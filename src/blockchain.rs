@@ -1,5 +1,5 @@
 use std::cell::RefCell;
-use rocksdb::{DB, Options};
+use rocksdb::{DB, Options, Error};
 use std::fs::File;
 use crate::block::Block;
 
@@ -8,7 +8,10 @@ pub struct Blockchain {
     db: DB,
 }
 
-
+pub struct BlockchainIterator<'a> {
+    db: &'a DB,
+    current_hash: Vec<u8>,
+}
 
 impl Blockchain {
     pub fn new() -> Self{
@@ -29,8 +32,7 @@ impl Blockchain {
             },
         }
         let mut blockchain = Blockchain {top,db};
-        return blockchain;
-        
+        blockchain
     }
 
     pub fn add(&mut self, data: String){
@@ -44,6 +46,26 @@ impl Blockchain {
             },
             Ok(None) => println!("Did you create the blockchain?"),
             Err(e) => println!("Put failed {}", e),
+        }
+    }
+
+    pub fn iterator(&self) -> BlockchainIterator{
+        BlockchainIterator{db: &self.db, current_hash: self.top.as_ref().unwrap().to_vec()}
+    }
+}
+
+impl<'a> BlockchainIterator<'a> {
+    pub fn next(&mut self) -> Result<Option<Block>, Error>{
+        let block;
+        match self.db.get(self.current_hash.to_vec()) {
+            Ok(Some(value)) => {
+                block = Block::deserialize(value);
+                self.current_hash = block.prev_hash()
+                        .ok().unwrap().to_vec();
+                Ok(Some(block))
+            },
+            Ok(None) => Ok(None),
+            Err(e) => Err(e),
         }
     }
 }

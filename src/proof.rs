@@ -22,7 +22,7 @@ impl<'a> Proof<'a> {
         let target = target << y;
         Proof{block, target}
     }
-
+    
     fn prepare_data(&self, nonce: u64) -> Vec<u8>{
         //TODO: add everything to Vec<u8>
         let mut result: Vec<u8> = Vec::<u8>::new();
@@ -35,7 +35,7 @@ impl<'a> Proof<'a> {
         result
     }
 
-    // TODO: FIX THIS SHIT
+    //TODO: check this funtion
     pub fn run(&mut self) -> Pdata{
         let mut hash: Vec<u8> = vec![0;4];
         let mut hash_int;
@@ -66,5 +66,19 @@ impl<'a> Proof<'a> {
         (nonce, hash)
     }
 
-   
+    pub fn validate(&mut self) -> bool{
+        let hash_int;
+        let hash;
+        let data = self.prepare_data(*self.block.nonce().ok().unwrap());
+
+        let mut hasher = Sha256::new();
+        hasher.input(data);
+        hash = hasher.result().to_vec();
+
+        hash_int = BigInt::from_bytes_le(Sign::Plus, &hash);
+
+        return hash_int.cmp(&self.target) == Ordering::Less
+             
+    }
+
 }
