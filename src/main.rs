@@ -11,11 +11,11 @@ fn main() {
         .version("0.0.1")
         .author("Mutex Unlocked")
         .about("Sinope blockchain")
-        .arg(Arg::with_name("addblock")
-                 .short("a")
-                 .long("addblock")
+        .arg(Arg::with_name("createblockchain")
+                 .short("c")
+                 .long("createblockchain")
                  .takes_value(true)
-                 .help("Adds a block to the blockchain"))
+                 .help("Creates a blockchain"))
         .arg(Arg::with_name("print")
                  .short("p")
                  .long("print")
@@ -23,10 +23,10 @@ fn main() {
                  .help("Prints the blockchain"))
         .get_matches();
 
-    let data = matches.value_of("addblock").unwrap();
+    let data = matches.value_of("createblockchain").unwrap();
 
-    let mut blockchain = Blockchain::new();
-    blockchain.add(data.to_string());
+    let mut blockchain = Blockchain::new(data.to_string());
+    //blockchain.add(data.to_string());
 
     match matches.occurrences_of("print") {
         _ => print_blockchain(blockchain),
@@ -41,7 +41,7 @@ fn print_blockchain(bc: Blockchain){
             Some(block) => {
                 let mut b = block.unwrap();
                 println!("Prev hash: {:?}", b.prev_hash().ok().unwrap());
-                println!("Data: {}", b.data().ok().unwrap());
+               // println!("Data: {}", b.data().ok().unwrap());
                 println!("Hash: {:?}", b.hash().ok().unwrap());
                 
                 let mut proof = Proof::new(&mut b);

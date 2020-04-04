@@ -1,6 +1,8 @@
 use std::time::{SystemTime, UNIX_EPOCH};
 use serde::{Deserialize, Serialize};
+use sha2::{Sha256, Digest};
 use crate::proof::Proof;
+use crate::transcation::Transaction;
 
 pub enum BarErr {
     Nothing
@@ -10,14 +12,14 @@ pub enum BarErr {
 pub struct Block {
     nonce: Option<u64>, 
     timestamp: Option<u128>,
-    data: Option<String>,
+    transactions: Option<Vec<Transaction>>,
     hash: Option<Vec<u8>>,
     prev_hash: Option<Vec<u8>>,
 }
 
 impl Block {
     // Creates a new block
-    pub fn new(prev_hash: Vec<u8>, data: String) -> Self {
+    pub fn new(prev_hash: Vec<u8>, transactions: Vec<Transaction>) -> Self {
         let start = SystemTime::now();
         let since_the_epoch = start.duration_since(UNIX_EPOCH)
             .expect("Time went backwards!");
@@ -27,7 +29,7 @@ impl Block {
         let mut b = Block{
             nonce: None,
             timestamp: Some(timestamp),
-            data: Some(data),
+            transactions: Some(transactions),
             hash: None,
             prev_hash: Some(prev_hash),
         };
@@ -38,9 +40,17 @@ impl Block {
         b
     }
 
+    pub fn hash_transactions(&self) -> Vec<u8>{
+        let mut t_hash: Vec<u8> = Vec::new();
+        for t in self.transactions().ok().unwrap().iter(){
+            t_hash.append(&mut t.id.clone().unwrap());
+        }
+        t_hash
+    }
+
     // Immutable access.
-    pub fn data(&self) -> Result<&String, BarErr> {
-        match self.data {
+    pub fn transactions(&self) -> Result<&Vec<Transaction>, BarErr> {
+        match self.transactions {
             Some(ref x) => Ok(x),
             None => Err(BarErr::Nothing)
         }
@@ -82,11 +92,9 @@ impl Block {
     }
 
 
-    pub fn genesis() -> Self{
-        let mut gen = String::new();
+    pub fn genesis(coinbase: Vec<Transaction>) -> Self{
         let v: Vec<u8> = vec![0;0];
-        gen.push_str("GENSIS");
-        let block = Block::new(v, gen);
+        let block = Block::new(v, coinbase);
         block
     }           
 }

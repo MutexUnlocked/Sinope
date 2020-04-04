@@ -26,7 +26,7 @@ impl<'a> Proof<'a> {
     fn prepare_data(&self, nonce: u64) -> Vec<u8>{
         //TODO: add everything to Vec<u8>
         let mut result: Vec<u8> = Vec::<u8>::new();
-        let mut tmp: Vec<u8> = self.block.data().ok().unwrap().clone().into_bytes();
+        let mut tmp: Vec<u8> = self.block.hash_transactions();
         result.append(&mut self.block.prev_hash().ok().unwrap().to_vec());
         result.append(&mut tmp);
         result.append(&mut hex::encode(self.block.timestamp().ok().unwrap().to_string()).into_bytes());
@@ -42,7 +42,7 @@ impl<'a> Proof<'a> {
         let mut nonce: u64 = 0;
         let max_nonce = u64::max_value();
 
-        println!("Mining the block containing {}", self.block.data().ok().unwrap());
+        println!("Mining the block containing {:?}", self.block.hash_transactions());
         while nonce < max_nonce {
             let data = self.prepare_data(nonce);
             let mut hasher = Sha256::new();
