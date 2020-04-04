@@ -62,7 +62,7 @@ impl<'a> Proof<'a> {
             }
         }
     
-        println!("Hash: {:?}", hash);
+        //println!("Hash: {:?}", hash);
         (nonce, hash)
     }
 

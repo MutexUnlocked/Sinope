@@ -18,7 +18,8 @@ pub struct BlockchainIterator<'a> {
 impl Blockchain {
     pub fn new(address: String) -> Self{
         // Create the blockchain with the genesis block
-        let db = DB::open_default("blockchain").unwrap();
+        //println!("HERE");
+        let db = DB::open_default("apple").unwrap();
         let top: Option<Vec<u8>>;
         match db.get(b"l"){
             Ok(Some(value)) => top = Some(value),
@@ -27,6 +28,7 @@ impl Blockchain {
                 let cbtx = new_coinbase_t(address, &mut gen_data);
                 let cbtx_vec = vec![cbtx];
                 let mut genesis = Block::genesis(cbtx_vec);
+                println!("{:?}", genesis.hash().ok().unwrap());
                 db.put(genesis.hash().ok().unwrap(),genesis.serialize());
                 db.put(b"l",genesis.hash().ok().unwrap());
                 top = Some(genesis.hash().ok().unwrap().to_vec());

@@ -24,10 +24,9 @@ fn main() {
         .get_matches();
 
     let data = matches.value_of("createblockchain").unwrap();
-
-    let mut blockchain = Blockchain::new(data.to_string());
-    //blockchain.add(data.to_string());
-
+        let mut blockchain = Blockchain::new(data.to_string());
+    
+    
     match matches.occurrences_of("print") {
         _ => print_blockchain(blockchain),
     }
@@ -39,6 +38,7 @@ fn print_blockchain(bc: Blockchain){
     loop{
         match iterator.next().ok(){
             Some(block) => {
+                // TODO: Fix unwrap() None value problem
                 let mut b = block.unwrap();
                 println!("Prev hash: {:?}", b.prev_hash().ok().unwrap());
                // println!("Data: {}", b.data().ok().unwrap());
