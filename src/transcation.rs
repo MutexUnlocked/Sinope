@@ -3,24 +3,24 @@ use sha2::{Sha256, Digest};
 
 const SUBSIDY: i32 = 10;
 
-#[derive(Serialize, Deserialize)]
-pub struct Touput {
+#[derive(Serialize, Deserialize, Clone)]
+pub struct Toutput {
     val: i32,
     pub_key: String,
 }
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Clone)]
 pub struct Tinput{
-    transaction_id: Vec<u8>,
-    vout: i32,
+    pub transaction_id: Vec<u8>,
+    pub vout: i32,
     script_sig: String,
 }
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Clone)]
 pub struct Transaction {
     pub id: Option<Vec<u8>>,
-    vin: Tinput,
-    vout: Touput,
+    pub vin: Vec<Tinput>,
+    pub vout: Vec<Toutput>,
 }
 
 
@@ -33,6 +33,23 @@ impl Transaction {
 
         self.id = Some(hash);
     }
+
+    pub fn is_coinbase(&self) -> bool {
+        unimplemented!()
+    }
+}
+
+impl Tinput{
+    pub fn can_unlock_output_with(&self, ud: &String) -> bool{
+        self.script_sig == *ud
+    }
+}
+
+
+impl Toutput{
+    pub fn can_unlock_with(&self, ud: &String) -> bool {
+        self.pub_key == *ud
+    }
 }
 
 
@@ -43,8 +60,8 @@ pub fn new_coinbase_t(to: String, data: &mut String) -> Transaction{
     }
 
     let tin = Tinput{transaction_id: b"".to_vec(), vout: -1 as i32, script_sig: data.to_string()};
-    let tout = Touput{val:SUBSIDY,pub_key: to};
-    let mut tx = Transaction{id: None, vin: tin, vout: tout};
+    let tout = Toutput{val:SUBSIDY,pub_key: to};
+    let mut tx = Transaction{id: None, vin: vec![tin], vout: vec![tout]};
     tx.set_id();
     tx
 }

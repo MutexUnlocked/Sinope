@@ -1,6 +1,7 @@
 use std::cell::RefCell;
 use rocksdb::{DB, Options, Error};
 use std::fs::File;
+use std::collections::HashMap;
 use crate::block::Block;
 use crate::transcation::Transaction;
 use crate::transcation::new_coinbase_t;
@@ -54,6 +55,48 @@ impl Blockchain {
             Ok(None) => println!("Did you create the blockchain?"),
             Err(e) => println!("Put failed {}", e),
         }
+    }
+
+    pub fn find_unspent_transactions(&self, address: String) -> Vec<Transaction>{
+        let mut unspent: Vec<Transaction> = Vec::new();
+        let mut spent_t: HashMap<String, Vec<usize>> =  HashMap::new();
+        let mut b_iterator = self.iterator();
+
+        loop{
+            let block = b_iterator.next();
+
+    'outputs: for tr in block.clone().unwrap().unwrap().transactions().ok().unwrap(){
+                let tid =  hex::encode(tr.id.as_ref().unwrap());
+
+                for (i, out) in tr.vout.iter().enumerate() {
+                    // Was the output spent
+                    if !spent_t.get(&tid).is_none(){
+                        for spent_output in spent_t[&tid].iter() {
+                            if *spent_output == i {
+                                continue 'outputs;
+                            }
+                        }
+                    }
+
+                    if out.can_unlock_with(&address){
+                        unspent.push(tr.clone());
+                    }
+                }
+
+                if !tr.is_coinbase(){
+                    for input in tr.vin.iter(){
+                        if input.can_unlock_output_with(&address){
+                            let input_tr_id = hex::encode(input.transaction_id.clone());
+                            spent_t.get_mut(&input_tr_id).unwrap().push(input.vout as usize);
+                        }
+                    }
+                }
+            }
+            if block.unwrap().unwrap().prev_hash().ok().unwrap().is_empty(){
+                break;
+            }
+        }
+        unspent
     }
 
     pub fn iterator(&self) -> BlockchainIterator{

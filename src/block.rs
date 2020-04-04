@@ -8,7 +8,7 @@ pub enum BarErr {
     Nothing
 }
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Clone)]
 pub struct Block {
     nonce: Option<u64>, 
     timestamp: Option<u128>,
