@@ -7,6 +7,7 @@ dependencies = [
  "bincode",
  "clap",
  "hex",
+ "lazy_static",
  "num",
  "rocksdb",
  "serde",

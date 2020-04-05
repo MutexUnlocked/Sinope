@@ -3,8 +3,7 @@ use rocksdb::{DB, Options, Error};
 use std::fs::File;
 use std::collections::HashMap;
 use crate::block::Block;
-use crate::transcation::Transaction;
-use crate::transcation::new_coinbase_t;
+use crate::transcation::{Transaction, new_coinbase_t, Toutput, Tinput};
 
 pub struct Blockchain {
     top: Option<Vec<u8>>,
@@ -20,7 +19,7 @@ impl Blockchain {
     pub fn new(address: String) -> Self{
         // Create the blockchain with the genesis block
         //println!("HERE");
-        let db = DB::open_default("apple").unwrap();
+        let db = DB::open_default("/tmp/apple").unwrap();
         let top: Option<Vec<u8>>;
         match db.get(b"l"){
             Ok(Some(value)) => top = Some(value),
@@ -57,7 +56,7 @@ impl Blockchain {
         }
     }
 
-    pub fn find_unspent_transactions(&self, address: String) -> Vec<Transaction>{
+    pub fn find_unspent_transactions(&self, address: &String) -> Vec<Transaction>{
         let mut unspent: Vec<Transaction> = Vec::new();
         let mut spent_t: HashMap<String, Vec<usize>> =  HashMap::new();
         let mut b_iterator = self.iterator();
@@ -78,14 +77,14 @@ impl Blockchain {
                         }
                     }
 
-                    if out.can_unlock_with(&address){
+                    if out.can_unlock_with(address){
                         unspent.push(tr.clone());
                     }
                 }
 
                 if !tr.is_coinbase(){
                     for input in tr.vin.iter(){
-                        if input.can_unlock_output_with(&address){
+                        if input.can_unlock_output_with(address){
                             let input_tr_id = hex::encode(input.transaction_id.clone());
                             spent_t.get_mut(&input_tr_id).unwrap().push(input.vout as usize);
                         }
@@ -98,6 +97,21 @@ impl Blockchain {
         }
         unspent
     }
+
+    pub fn find_utr(&self, address: &String) -> Vec<Toutput>{
+        let unspet_trs = self.find_unspent_transactions(address);
+        let mut utrs: Vec<Toutput> = Vec::new();
+
+        for tr in unspet_trs.iter(){
+            for out in tr.vout.iter() {
+                if out.can_unlock_with(address){
+                    utrs.push(out.clone());
+                }
+            }
+        }
+        utrs
+    }
+    
 
     pub fn iterator(&self) -> BlockchainIterator{
         BlockchainIterator{db: &self.db, current_hash: self.top.as_ref().unwrap().to_vec()}

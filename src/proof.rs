@@ -5,7 +5,7 @@ use num::bigint::{BigInt, Sign, ToBigInt};
 
 //use bytes::{BytesMut, BufMut};
 
-const TARGET_BITS: usize = 24;
+const TARGET_BITS: usize = 5;
 
 type Pdata = (u64, Vec<u8>);
 

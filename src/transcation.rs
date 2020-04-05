@@ -5,7 +5,7 @@ const SUBSIDY: i32 = 10;
 
 #[derive(Serialize, Deserialize, Clone)]
 pub struct Toutput {
-    val: i32,
+    pub val: i32,
     pub_key: String,
 }
 
