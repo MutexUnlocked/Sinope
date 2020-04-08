@@ -42,8 +42,8 @@ fn main() {
     get_balance(data1);
     
     
-    match matches.occurrences_of("print") {
-        _ => print_blockchain(),
+    if matches.occurrences_of("print") == 1 {
+        print_blockchain();
     }
 }
 
@@ -53,15 +53,19 @@ fn print_blockchain(){
     loop{
         match iterator.next().ok(){
             Some(block) => {
-                // TODO: Fix unwrap() None value problem
-                let mut b = block.unwrap();
-                println!("Prev hash: {:?}", b.prev_hash().ok().unwrap());
-               // println!("Data: {}", b.data().ok().unwrap());
-                println!("Hash: {:?}", b.hash().ok().unwrap());
+                match block{
+                    None => break,
+                    _ =>{
+                        let mut b = block.unwrap();
+                        println!("Prev hash: {:?}", b.prev_hash().ok().unwrap());
+                        // println!("Data: {}", b.data().ok().unwrap());
+                        println!("Hash: {:?}", b.hash().ok().unwrap());
                 
-                let mut proof = Proof::new(&mut b);
-                println!("Valid: {:?}", proof.validate());
-
+                        let mut proof = Proof::new(&mut b);
+                        println!("Valid: {:?}", proof.validate());
+                    }
+                }
+               
             },
             _ => { break; }
         }

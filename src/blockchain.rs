@@ -3,7 +3,7 @@ use rocksdb::{DB, Options, Error};
 use std::fs::File;
 use std::collections::HashMap;
 use crate::block::Block;
-use crate::transcation::{Transaction, new_coinbase_t, Toutput, Tinput};
+use crate::transcation::{Transaction, new_coinbase_t, Toutput, Tinput, is_coinbase};
 
 pub struct Blockchain {
     top: Option<Vec<u8>>,
@@ -82,7 +82,7 @@ impl Blockchain {
                     }
                 }
 
-                if !tr.is_coinbase(){
+                if !is_coinbase(tr){
                     for input in tr.vin.iter(){
                         if input.can_unlock_output_with(address){
                             let input_tr_id = hex::encode(input.transaction_id.clone());
@@ -96,6 +96,28 @@ impl Blockchain {
             }
         }
         unspent
+    }
+
+    pub fn find_spendable_outputs(&self, address: String, amount: usize) -> (usize,HashMap<String, Vec<usize>>){
+        let unspent_transactions = self.find_unspent_transactions(&address);
+        let mut unspent_outputs: HashMap<String, Vec<usize>> = HashMap::new();
+        let mut many: usize = 0;
+
+        for tr in unspent_transactions.iter(){
+            let tr_id = hex::encode(tr.clone().id.unwrap());
+
+            for (idx, out) in tr.vout.iter().enumerate(){
+                if(out.can_unlock_with(&address) && many < amount){
+                    many += out.val as usize;
+                    unspent_outputs.get_mut(&tr_id).unwrap().push(idx);
+
+                    if many > amount {
+                        break;
+                    }
+                }
+            } 
+        }
+        (many, unspent_outputs)
     }
 
     pub fn find_utr(&self, address: &String) -> Vec<Toutput>{

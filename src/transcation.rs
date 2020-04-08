@@ -24,6 +24,12 @@ pub struct Transaction {
 }
 
 
+pub fn is_coinbase(tr: &Transaction) -> bool {
+    return tr.vin.len() == 1 as usize &&
+     tr.vin.get(0).unwrap().transaction_id.len() == 0 && tr.vin.get(0).unwrap().vout == -1
+}
+
+
 impl Transaction {
     pub fn set_id(&mut self){
         let enc = bincode::serialize(self).unwrap();
@@ -32,10 +38,6 @@ impl Transaction {
         let hash = hasher.result().to_vec();
 
         self.id = Some(hash);
-    }
-
-    pub fn is_coinbase(&self) -> bool {
-        unimplemented!()
     }
 }
 
