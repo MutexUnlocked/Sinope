@@ -13,7 +13,7 @@ pub struct Toutput {
 pub struct Tinput{
     pub transaction_id: Vec<u8>,
     pub vout: i32,
-    script_sig: String,
+    pub script_sig: String,
 }
 
 #[derive(Serialize, Deserialize, Clone)]
@@ -67,3 +67,4 @@ pub fn new_coinbase_t(to: String, data: &mut String) -> Transaction{
     tx.set_id();
     tx
 }
+

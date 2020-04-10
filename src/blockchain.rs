@@ -18,7 +18,7 @@ pub struct BlockchainIterator<'a> {
 impl Blockchain {
     pub fn new(address: String) -> Self{
         // Create the blockchain with the genesis block
-        //println!("HERE");
+        // println!("HERE");
         let db = DB::open_default("/tmp/apple").unwrap();
         let top: Option<Vec<u8>>;
         match db.get(b"l"){
@@ -138,6 +138,31 @@ impl Blockchain {
     pub fn iterator(&self) -> BlockchainIterator{
         BlockchainIterator{db: &self.db, current_hash: self.top.as_ref().unwrap().to_vec()}
     }
+}
+
+pub fn new_utro_transaction(from: String, to: String, amount: usize, bc: &Blockchain){
+    let mut inputs: Vec<Tinput> = Vec::new();
+    let mut outputs: Vec<Toutput> = Vec::new();
+
+    let (acc, valid_outputs) = bc.find_spendable_outputs(from.to_string(), amount);
+
+    if acc < amount {
+        panic!("ERROR: Not enough funds");
+    }
+    
+    // Build a list of inputs
+    for (id, outs) in valid_outputs{
+        let id_dec = hex::decode(id).ok().unwrap();
+
+
+        for out in outs{
+            let input = Tinput{transaction_id: id_dec.to_vec(), vout:out as i32,
+             script_sig: from.to_string()};
+             inputs.push(input);
+        }
+    }
+
+    
 }
 
 impl<'a> BlockchainIterator<'a> {
